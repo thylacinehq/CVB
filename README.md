@@ -1,6 +1,8 @@
 # CVB, the Constraint-Violation Benchmark
 
-**Do coding agents honor project constraints when they arrive as memory instead of orders?**
+A benchmark that tests whether coding agents honor project constraints when those constraints arrive as memory instead of orders.
+
+## What it does
 
 Teams record a constraint once and expect every future AI generation to honor
 it. "We standardized on httpx after requests caused the March
@@ -13,6 +15,14 @@ very different ways:
 
 Instruction-following benchmarks (IFEval, AgentIF) only measure the first.
 CVB measures both, plus a no-context baseline, and reports the difference.
+
+## Status
+
+Version 2.0.0, prompt version 2.0. One full run is published (2026-07-30 to 2026-08-02, Groq). It covers single-turn code generation only. See Results and Limitations below.
+
+## Stack
+
+Python 3.10+, `httpx`, `pytest`. Any OpenAI-compatible endpoint.
 
 ## Arms
 
@@ -43,24 +53,6 @@ genuinely non-directive.
 - Reported per arm: **strict accuracy** (all constraints of a run honored)
   and **per-constraint accuracy** (IFEval-style).
 - No LLM judge. Temperature 0. Runs are cheap and exactly reproducible.
-
-## Run it
-
-```bash
-pip install -e .
-export GROQ_API_KEY=...   # or any OpenAI-compatible endpoint via --base-url
-
-python -m cvb.runner --scenarios scenarios --dry-run          # list matrix
-python -m cvb.runner --scenarios scenarios --runs 3 \
-    --json results/out.json                                   # ~945 calls
-python -m cvb.report results/out.json --markdown results/out.md
-```
-
-Default models are probed from the live Groq catalog (first three available
-of: `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, `openai/gpt-oss-120b`,
-`qwen/qwen3.6-27b`, `openai/gpt-oss-20b`).
-Override with `--models`. Point anywhere OpenAI-compatible with
-`--base-url` / `--api-key-env`.
 
 ## Results
 
@@ -94,7 +86,7 @@ What the numbers say:
 
 Per-category tables: [`results/2026-07-29-groq/report.md`](results/2026-07-29-groq/report.md).
 
-## Honest limitations
+## Limitations
 
 - **Regex checks are conservative.** They catch the canonical violation and
   miss others. A pass means "no detected violation", which falls short of
@@ -123,10 +115,41 @@ Per-category tables: [`results/2026-07-29-groq/report.md`](results/2026-07-29-gr
   a developer memory layer whose job is exactly the incentivized arm. The
   benchmark imports nothing from it and runs without it.
 
-## Prompt changelog
+## Run it
 
-- `2.0` (2026-07-29). Initial three-arm templates.
+```bash
+pip install -e .
+export GROQ_API_KEY=...   # or any OpenAI-compatible endpoint via --base-url
+
+python -m cvb.runner --scenarios scenarios --dry-run          # list matrix
+python -m cvb.runner --scenarios scenarios --runs 3 \
+    --json results/out.json                                   # ~945 calls
+python -m cvb.report results/out.json --markdown results/out.md
+```
+
+Default models are probed from the live Groq catalog (first three available
+of: `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, `openai/gpt-oss-120b`,
+`qwen/qwen3.6-27b`, `openai/gpt-oss-20b`).
+Override with `--models`. Point anywhere OpenAI-compatible with
+`--base-url` / `--api-key-env`.
+
+Prompt changelog: `2.0` (2026-07-29), initial three-arm templates.
+
+## Project structure
+
+```
+cvb/         runner, prompts, scenario loader, checks, report
+scenarios/   35 scenario JSON files
+tests/       pytest suite (pip install -e ".[dev]" && pytest)
+results/     raw JSON and report for the 2026-07-29-groq run
+notes/       design notes for v2
+docs/        index.html
+```
+
+## Contributing
+
+Issues and pull requests are welcome. New scenarios need deterministic regex checks and must pass the scenario lint (no imperative wording in constraint text). Run `pytest` before opening a PR.
 
 ## License
 
-MIT.
+MIT. See LICENSE.
